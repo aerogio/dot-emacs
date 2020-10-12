@@ -622,8 +622,6 @@ that you can follow up with j or k.
 :ensure t)
 
 #+END_SRC
-
-
 * Electric Pair
 
 #+begin_src emacs-lisp
@@ -1141,7 +1139,7 @@ Here I have my org-mode configuration
 # end:
 
 #+STARTUP: indent overview
-#+options: toc:1 
+#+options: toc:1
 # #+setupfile: https://fniessen.github.io/org-html-themes/setup/theme-readtheorg.setup
 #+attr_html: width="100px"
 #+attr_org: :width 100
