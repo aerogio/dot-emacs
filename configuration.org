@@ -1,0 +1,1148 @@
+#+TITLE: GIOS CONFIG
+
+
+* Intro
+
+Ciao!  This is my configuration file literate written in org-mode. One day I will clear it up In promise.
+
+* Set personal information
+
+#+BEGIN_SRC emacs-lisp
+  (setq user-full-name "Giovanni Calzolari"
+	user-mail-address "giovannicalzolari@outlook.com"
+	calendar-latitude 59.3
+	calendar-longitude 18.1
+	calendar-location-name "Stockholm, SE")
+#+END_SRC
+* First settings
+
+** 1
+- don't show the set up window when we open emacs
+- don't show the tool bar menu
+- instead of asking yes or no, ask y or n
+- f5 to revert the buffer
+- set mu4e to f4
+- set replace-string to f3
+- C-x 2 and C-x 3 this time moves the cursor on the other
+  tab already
+- put the back up file in directory ~/.saves ciao
+- swap windows 
+#+BEGIN_SRC emacs-lisp
+  (setq inhibit-startup-message t)
+  (tool-bar-mode -1)
+  (fset 'yes-or-no-p 'y-or-n-p)
+  (global-set-key (kbd "<f5>") 'revert-buffer)
+  (global-set-key (kbd "<f4>") 'mu4e)
+  (global-set-key (kbd "<f3>") 'replace-string)
+  (global-set-key "\C-x2" (lambda () (interactive)(split-window-vertically) (other-window 1)))
+  (global-set-key "\C-x3" (lambda () (interactive)(split-window-horizontally) (other-window 1)))
+
+  (set-face-attribute 'default nil :height 140)
+  (setq backup-directory-alist `(("." . "~/.saves")))
+
+  (defun swap-buffer ()
+    (interactive)
+    (cond ((one-window-p) (display-buffer (other-buffer)))
+          ((let* ((buffer-a (current-buffer))
+                  (window-b (cadr (window-list)))
+                  (buffer-b (window-buffer window-b)))
+             (set-window-buffer window-b buffer-a)
+             (switch-to-buffer buffer-b)
+             (other-window 1)))))
+  (global-set-key "\C-x7" (lambda () (interactive)(swap-buffer)))
+#+END_SRC 
+
+- display battery when full screen
+- don't display the menu bar, nor scroll bar
+- don't display title bar but then you can't resize
+
+#+begin_src emacs-lisp
+  (display-battery-mode t)
+  (menu-bar-mode -1)
+  (scroll-bar-mode -1)
+#+end_src
+** packages
+- Load the packages from Melpa
+- Install the package use-package, to easily install packages
+- Install the package try, to try packages
+- Install the package which-key, to help 
+- Flex matching to have completion when you look for a new file
+  Note: no longer needed because of swiper!
+- winner mode to remember windows position with C-c <left> or <right>
+- ace-window to switch through multiple windows easily with C-x o
+
+#+begin_src emacs-lisp
+(require 'package)
+(add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/") t)
+
+(require 'package)
+  (setq package-enable-at-startup nil)
+  (add-to-list 'package-archives
+	       '("melpa" . "https://melpa.org/packages/") t)
+  ;; (package-initialize)
+#+end_src
+#+begin_src emacs-lisp
+  (require 'package)
+  (setq package-enable-at-startup nil)
+  (add-to-list 'package-archives
+	       '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+  ;; (package-initialize)
+
+  ;; Bootstrap `use-package'
+  (unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+  (use-package try
+  :ensure t)
+  (setq package-check-signature nil)
+
+  (use-package which-key
+  :ensure t
+  :config
+  (which-key-mode))
+
+;  (setq ido-enable-flex-matching t)
+;  (setq ido-everywhere t)
+;  (ido-mode 1)
+
+  (winner-mode 1)
+
+  (use-package ace-window
+    :ensure t
+    :init
+    (progn
+      (global-set-key [remap other-window] 'ace-window)
+      (custom-set-faces
+       '(aw-leading-char-face
+	 ((t (:inherit ace-jump-face-foreground :height 3.0)))))
+      ))
+  
+
+#+end_src
+
+** Search mode Swiper (and ivy and counsel and avy)!
+
+#+begin_src emacs-lisp
+  (use-package ivy
+    :ensure t
+    :diminish (ivy-mode)
+    :bind (("C-x b" . ivy-switch-buffer))
+    :config
+    (ivy-mode 1)
+    (setq ivy-use-virtual-buffers t)
+    (setq ivy-display-style 'fancy))
+
+  (use-package counsel
+    :bind
+    (("M-y" . counsel-yank-pop)
+     :map ivy-minibuffer-map
+     ("M-y" . ivy-next-line)))
+
+  (use-package swiper
+    :ensure try
+    :bind (("C-s" . swiper)
+           ("C-r" . swiper)
+           ("C-c C-r" . ivy-resume)
+           ("M-x" . counsel-M-x)
+           ("C-x C-f" . counsel-find-file)
+           ("<f1> f" . counsel-describe-function))
+    :config
+    (progn
+      (ivy-mode 1)
+      (setq ivy-use-virtual-buffers t)
+      (setq ivy-display-style 'fancy)
+      (define-key read-expression-map (kbd "C-r") 'counsel-expression-history)
+      ))
+
+    (use-package avy
+    :ensure t
+    :bind ("M-s" . avy-goto-char))
+
+#+end_src
+
+** Auto-completion  
+
+#+begin_src emacs-lisp
+  (use-package auto-complete
+    :ensure t
+    :init
+    (progn
+      (ac-config-default)
+      (global-auto-complete-mode t)
+      ))
+#+end_src
+
+** Themes
+
+#+begin_src emacs-lisp
+  (use-package color-theme-modern
+    :ensure t)
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package modus-vivendi-theme
+    :ensure t)
+  (use-package modus-operandi-theme
+    :ensure t)
+#+end_src
+
+** Reveal.js
+
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+#+begin_src emacs-lisp
+    (use-package ox-reveal
+      :ensure ox-reveal)
+  (setq org-reveal-root "https://cdn.jsdelivr.net/npm/reveal.js")
+
+  (setq org-reveal-mathjax t)
+
+  (use-package htmlize
+    :ensure t)
+#+end_src
+
+** Undo tree
+
+#+begin_src emacs-lisp
+  (use-package undo-tree
+    :ensure t
+    :init
+    (global-undo-tree-mode))
+#+end_src
+
+** Size of minibuffer to 1.1 original one
+#+begin_src emacs-lisp
+  (add-hook 'minibuffer-setup-hook 'my-minibuffer-setup)
+  (defun my-minibuffer-setup ()
+    (set (make-local-variable 'face-remapping-alist)
+         '((default :height 1.1))))
+#+end_src
+
+** Resize windows of buffers
+
+- So basically if you type C-c v it expand current window to use half of the other window's lines
+#+begin_src emacs-lisp
+  (defun halve-other-window-height ()
+    "Expand current window to use half of the other window's lines."
+    (interactive)
+    (enlarge-window (/ (window-height (next-window)) 2)))
+  (global-set-key (kbd "C-c v") 'halve-other-window-height)
+
+#+end_src
+
+** Minimize window bounded
+
+#+begin_src emacs-lisp
+  (global-set-key (kbd "C-c C-x m") 'minimize-window)
+#+end_src
+
+** Mode bar
+
+#+begin_src emacs-lisp
+
+  (use-package smart-mode-line
+    :ensure t
+
+    :init
+    (setq sml/no-confirm-load-theme t)
+    (setq sml/theme 'dark)
+
+    :config
+    (sml/setup))
+#+end_src
+
+** Visual line mode and HL line and line spacing
+
+- Basically when you go to the next line you don't
+  see the ugly arrow, (exceptin mu4e which
+  otherwise fucks up the system)
+- Also hl line, it's an horizontal line where you
+  are which can be comfortable with this super
+  subtle RoyalBlue4, you basically don't see it,
+  but you see it ;)
+- Also make disappear the window line separator
+- Also set a slightly higher line spacingx
+#+begin_src emacs-lisp
+    (add-hook 'text-mode-hook #'visual-line-mode)
+
+
+    (global-hl-line-mode t)
+    (set-face-background hl-line-face "#1f3550")
+
+    (set-face-attribute 'vertical-border nil)
+    (set-face-attribute 'vertical-border  nil :foreground "#282a2e")
+  (setq-default line-spacing 0.08)
+#+end_src
+
+* Fly-check
+
+#+begin_src emacs-lisp
+  (use-package flycheck
+    :ensure t
+    :init
+    (global-flycheck-mode t))
+#+end_src
+
+* Kivy
+
+#+begin_src emacs-lisp
+  (use-package kivy-mode
+    :ensure t)
+
+#+end_src
+
+* buffer stuff
+
+#+begin_src emacs-lisp
+(use-package bufler :ensure t)
+(defun mz/bufler (&optional force-refresh)
+  (interactive "P")
+  (bufler-list)
+  ;; (delete-other-windows)
+
+)
+
+(global-set-key (kbd "C-x C-b") 'mz/bufler)
+
+#+end_src
+
+#+BEGIN_SRC emacs-lisp  :tangle no
+
+  (global-set-key (kbd "C-x C-b") 'ibuffer)
+  (setq ibuffer-saved-filter-groups
+        (quote (("default"
+                 ("dired" (mode . dired-mode))
+                 ("org" (name . "^.*org$"))
+                 ("magit" (mode . magit-mode))
+                 ("IRC" (or (mode . circe-channel-mode) (mode . circe-server-mode)))
+                 ("web" (or (mode . web-mode) (mode . js2-mode)))
+                 ("shell" (or (mode . eshell-mode) (mode . shell-mode)))
+                 ("mu4e" (or
+
+                          (mode . mu4e-compose-mode)
+                          (name . "\*mu4e\*")
+                          ))
+                 ("programming" (or
+                                 (mode . clojure-mode)
+                                 (mode . clojurescript-mode)
+                                 (mode . python-mode)
+                                 (mode . c++-mode)))
+                 ("emacs" (or
+                           (name . "^\\*scratch\\*$")
+                           (name . "^\\*Messages\\*$")))
+                 ))))
+  (add-hook 'ibuffer-mode-hook
+            (lambda ()
+              (ibuffer-auto-mode 1)
+              (ibuffer-switch-to-saved-filter-groups "default")))
+
+  ;; don't show these
+  ;;(add-to-list 'ibuffer-never-show-predicates "zowie")
+  ;; Don't show filter groups if there are no buffers in that group
+  (setq ibuffer-show-empty-filter-groups nil)
+
+  ;; Don't ask for confirmation to delete marked buffers
+  (setq ibuffer-expert t)
+
+#+END_SRC
+
+* Mu4e email
+
+#+begin_src emacs-lisp
+  (add-to-list 'load-path "/home/aerogio/email/mu-1.4.10/mu4e/")
+  (require 'mu4e)
+  (require 'smtpmail)
+#+end_src
+
+- settings
+
+#+begin_src emacs-lisp
+  (setq message-send-mail-function 'smtpmail-send-it
+        starttls-use-gnutls t
+        mu4e-sent-messages-behavior 'sent
+        mu4e-sent-folder "/Sent"
+        mu4e-drafts-folder "/Drafts"
+        user-mail-address "giovannicalzolari@outlook.com"
+        user-full-name "Giovanni Calzolari"
+        smtpmail-default-smtp-server "outlook.office365.com"
+        smtpmail-local-domain "outGio.outlook"
+        smtpmail-smtp-user "giovannicalzolari@outlook.com"
+        smtpmail-smtp-server "smtp.office365.com"
+        smtpmail-stream-type 'starttls
+        smtpmail-smtp-service 587)
+
+  (setq mu4e-maildir "~/email/"
+        mu4e-trash-folder "/Deleted"
+        mu4e-refile-folder "/Archive"
+        mu4e-get-mail-command "mbsync -a"
+        mu4e-update-interval 300 ;; second
+        mu4e-compose-signature-auto-include nil
+        mu4e-view-show-images t
+        mu4e-view-show-addresses t
+        mu4e-attachment-dir "~/Dropbox"
+        ;;mu4e-use-fancy-chars t
+        )
+
+#+end_src
+
+- shortcuts
+
+#+begin_src emacs-lisp
+  (setq mu4e-maildir-shortcuts
+        '(
+          ("/Inbox" . ?g)
+          ("/Archive" . ?G)
+          ("/Sent" . ?s)
+          ))
+#+end_src
+
+- bookmarks
+
+#+begin_src emacs-lisp
+  (setq mu4e-bookmarks
+        `(
+          ("flag:unread AND NOT flag:trashed" "Unread messages" ?u)
+          ("flag:unread" "Unread messages" ?n)
+          ("date:today..now" "Today's messages" ?t)
+          ("date:7d..now" "Last 7 days" ?w)
+          ("mime:image/*" "Messages with images" ?p)
+          (,(mapconcat 'identity
+                       (mapcar
+                        (lambda (maildir)
+                          (concat "maildir:" (car maildir)))
+                        mu4e-maildir-shortcuts) " OR ")
+           "All inboxes" ?i)))
+#+end_src
+
+- mu4e and org-mode
+#+begin_src emacs-lisp
+  (require 'org-mu4e)
+  (setq org-mu4e-convert-to-html t)
+
+  ;;(add-to-list 'load-path "/home/zamansky/Dropbox/opt/org-mode/contrib/lisp")
+  ;;(require 'org-mime)
+
+  ;; this seems to fix the babel file saving thing
+  (defun org~mu4e-mime-replace-images (str current-file)
+    "Replace images in html files with cid links."
+    (let (html-images)
+      (cons
+       (replace-regexp-in-string ;; replace images in html
+        "src=\"\\([^\"]+\\)\""
+        (lambda (text)
+          (format
+           "src=\"./:%s\""
+           (let* ((url (and (string-match "src=\"\\([^\"]+\\)\"" text)
+                            (match-string 1 text)))
+                  (path (expand-file-name
+                         url (file-name-directory current-file)))
+                  (ext (file-name-extension path))
+                  (id (replace-regexp-in-string "[\/\\\\]" "_" path)))
+             (add-to-list 'html-images
+                          (org~mu4e-mime-file
+                           (concat "image/" ext) path id))
+             id)))
+        str)
+       html-images)))
+
+  (add-to-list 'mu4e-view-actions
+               '("ViewInBrowser" . mu4e-action-view-in-browser) t)
+#+end_src
+* Python
+
+** which python?
+
+#+begin_src emacs-lisp
+  (setq python-shell-interpreter "/home/aerogio/anaconda3/bin/python")
+#+end_src
+
+** Elpy
+
+#+begin_src emacs-lisp
+  (use-package elpy
+    :ensure t
+    :init
+    (elpy-enable))
+
+  (setq elpy-shell-echo-input nil)
+#+end_src
+** Jedi
+
+#+begin_src emacs-lisp
+  (use-package jedi
+    :ensure t
+    :init
+    (add-hook 'python-mode-hook 'jedi:setup)
+    (add-hook 'python-mode-hook 'jedi:ac-setup))
+#+end_src
+** Yasnippet
+
+#+begin_src emacs-lisp
+  (use-package yasnippet
+    :ensure t
+    :init
+    (yas-global-mode 1))
+#+end_src
+** virtualenvwrapper
+
+#+begin_src emacs-lisp
+  (use-package virtualenvwrapper
+    :ensure t
+    :config
+    (venv-initialize-interactive-shells)
+    (venv-initialize-eshell))
+#+end_src
+** Live python
+
+# #+begin_src emacs-lisp
+#   (use-package live-py-mode
+#     :ensure t)
+# 
+#   (add-hook 'live-py-mode-hook (lambda ()
+#                                  (progn
+#                                    (setq-default live-py-version (executable-find "python"))
+#                                    (live-py-update-all))))
+# 
+#   (setq live-py-version "python3")
+# #+end_src
+* Misc Packages
+
+- HL line highlights the line commented cause I don't like it
+- beacon, I don't know sth to see the cursor better
+- hungry delete, this to delete all the spaces
+- aggressive indent, basically work on the indentation,
+  doing it automatically
+- expand region
+
+
+#+begin_src emacs-lisp
+   ;; (global-hl-line-mode nil)
+
+  (use-package beacon
+    :ensure t
+    :config
+    (beacon-mode 1)
+    )
+
+  (use-package hungry-delete
+    :ensure t
+    :config
+    (global-hungry-delete-mode))
+
+  (use-package aggressive-indent
+    :ensure t
+    :config
+    (global-aggressive-indent-mode 1))
+
+  (add-hook 'kivy-mode
+            (lambda ()
+              (set (make-local-variable 'global-aggressive-indent-mode) nil)))
+  ;; (setq aggressive-indent-excluded-modes
+  ;;       (remove 'python-mode aggressive-indent-excluded-modes))
+
+   (use-package expand-region
+     :ensure t
+     :config
+     (global-set-key (kbd "C-=") 'er/expand-region))
+#+end_src
+
+- iedit
+- multiple cursor (but you need keybindings if you actually
+  want it)
+- narrow-widen automatically bound to C-x n
+
+#+begin_src emacs-lisp
+  (use-package iedit
+    :ensure t)
+
+  ;; (use-package multiple-cursors
+  ;;   :ensure t)
+
+  (defun narrow-or-widen-dwim (p)
+    "If the buffer is narrowed, it widens. Otherwise, it narrows intelligently.
+    Intelligently means: region, org-src-block, org-subtree, or defun,
+    whichever applies first.
+    Narrowing to org-src-block actually calls `org-edit-src-code'.
+
+    With prefix P, don't widen, just narrow even if buffer is already
+    narrowed."
+    (interactive "P")
+    (declare (interactive-only))
+    (cond ((and (buffer-narrowed-p) (not p)) (widen))
+          ((region-active-p)
+           (narrow-to-region (region-beginning) (region-end)))
+          ((derived-mode-p 'org-mode)
+           ;; `org-edit-src-code' is not a real narrowing command.
+           ;; Remove this first conditional if you don't want it.
+           (cond ((ignore-errors (org-edit-src-code))
+                  (delete-other-windows))
+                 ((org-at-block-p)
+                  (org-narrow-to-block))
+                 (t (org-narrow-to-subtree))))
+          (t (narrow-to-defun))))
+  (define-key ctl-x-map "n" #'narrow-or-widen-dwim)
+#+end_src
+
+- so the first one I'm not sure but
+- this is to always automatically load new version of files
+
+#+begin_src emacs-lisp
+  (setq save-interprogram-paste-before-kill t)
+
+  (global-auto-revert-mode 1)
+  (setq auto-revert-verbose nil)
+#+end_src
+* OB-translate
+#+begin_src emacs-lisp
+  (use-package ob-translate
+    :ensure t)
+#+end_src
+* Hydra
+
+what is it? maybe you want it
+
+Imagine that you have bound C-c j and C-c k in
+your config. You want to call C-c j and C-c k in
+some (arbitrary) sequence. Hydra allows you to:
+
+Bind your functions in a way that pressing C-c
+jjkk3j5k is equivalent to pressing C-c j C-c j C-c
+k C-c k M-3 C-c j M-5 C-c k. Any key other than j
+or k exits this state.
+
+Assign a custom hint to this group of functions,
+so that you know immediately after pressing C-c
+that you can follow up with j or k.
+
+
+
+#+BEGIN_SRC emacs-lisp
+(use-package hydra
+:ensure t)
+
+#+END_SRC
+
+
+* Electric Pair
+
+#+begin_src emacs-lisp
+(electric-pair-mode 1)
+#+end_src
+
+#+begin_src emacs-lisp
+(defun electric-pair ()
+      "If at end of line, insert character pair without surrounding spaces.
+    Otherwise, just insert the typed character."
+      (interactive)
+      (if (eolp) (let (parens-require-spaces)
+(insert-pair)) (self-insert-command 1)))
+
+
+    (add-hook 'python-mode-hook
+              (lambda ()
+                (define-key python-mode-map "\"" 'electric-pair)
+                (define-key python-mode-map "\"" 'electric-pair)
+                (define-key python-mode-map "(" 'electric-pair)
+                (define-key python-mode-map "[" 'electric-pair)
+                (define-key python-mode-map "{" 'electric-pair)))
+#+end_src
+* Git 
+
+#+begin_src emacs-lisp
+  (use-package magit
+    :ensure t
+    :init
+    (progn
+      (setq magit-section-initial-visibility-alist
+            '((stashes . hide) (untracked . hide) (unpushed . hide)))
+    
+    
+      (bind-key "C-x g" 'magit-status)
+      ))
+
+  (setq magit-status-margin
+        '(t "%Y-%m-%d %H:%M " magit-log-margin-width t 18))
+
+  (use-package git-timemachine
+    :ensure t
+    )
+
+  (use-package git-gutter-fringe
+    :ensure t
+    :config
+    (global-git-gutter-mode))
+
+  (use-package smerge-mode
+    :after hydra
+    :config
+    (defhydra unpackaged/smerge-hydra
+      (:color pink :hint nil :post (smerge-auto-leave))
+      "
+    ^Move^       ^Keep^               ^Diff^                 ^Other^
+    ^^-----------^^-------------------^^---------------------^^-------
+    _n_ext       _b_ase               _<_: upper/base        _C_ombine
+    _p_rev       _u_pper              _=_: upper/lower       _r_esolve
+    ^^           _l_ower              _>_: base/lower        _k_ill current
+    ^^           _a_ll                _R_efine
+    ^^           _RET_: current       _E_diff
+    "
+      ("n" smerge-next)
+      ("p" smerge-prev)
+      ("b" smerge-keep-base)
+      ("u" smerge-keep-upper)
+      ("l" smerge-keep-lower)
+      ("a" smerge-keep-all)
+      ("RET" smerge-keep-current)
+      ("\C-m" smerge-keep-current)
+      ("<" smerge-diff-base-upper)
+      ("=" smerge-diff-upper-lower)
+      (">" smerge-diff-base-lower)
+      ("R" smerge-refine)
+      ("E" smerge-ediff)
+      ("C" smerge-combine-with-next)
+      ("r" smerge-resolve)
+      ("k" smerge-kill-current)
+      ("ZZ" (lambda ()
+              (interactive)
+              (save-buffer)
+              (bury-buffer))
+       "Save and bury buffer" :color blue)
+      ("q" nil "cancel" :color blue))
+    :hook (magit-diff-visit-file . (lambda ()
+                                     (when smerge-mode
+                                       (unpackaged/smerge-hydra/body)))))
+
+
+
+  (use-package forge
+    :ensure t)
+#+end_src
+* Web mode
+
+#+begin_src emacs-lisp
+    (use-package web-mode
+      :ensure t
+      :config
+      (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+      (setq web-mode-engines-alist
+            '(("django"    . "\\.html\\'")))
+      (setq web-mode-ac-sources-alist
+            '(("css" . (ac-source-css-property))
+              ("html" . (ac-source-words-in-buffer ac-source-abbrev))))
+
+      (setq web-mode-enable-auto-closing t)
+      ;; (setq web-mode-enable-auto-pairing t)
+      (setq web-mode-enable-auto-quoting t)) ; this fixes the quote problem I mentioned
+
+
+  ;; (defun my-web-mode-hook ()
+  ;;   (setq web-mode-enable-auto-pairing nil))
+
+  ;; (add-hook 'web-mode-hook  'my-web-mode-hook)
+
+  ;; (defun sp-web-mode-is-code-context (id action context)
+  ;;   (and (eq action 'insert)
+  ;;        (not (or (get-text-property (point) 'part-side)
+  ;;                 (get-text-property (point) 'block-side)))))
+
+  ;; (sp-local-pair 'web-mode "<" nil :when '(sp-web-mode-is-code-context))
+#+end_src
+
+* org-mode configuration
+
+
+Here I have my org-mode configuration
+
+- hide leading stars
+- Save all the org buffer when you archive it
+- put languages
+- org-tempo to write shortcut <s tab
+- bullets
+- Start the calendar on Monday
+- special C-a C-e
+#+begin_src emacs-lisp
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((C . t)
+     (python . t)
+     (shell . t)
+     (matlab . t)))
+#+end_src
+#+BEGIN_SRC emacs-lisp
+  (setq org-hide-leading-stars t)
+
+  (setq org-archive-subtree-save-file-p t)
+
+  (advice-add 'org-archive-subtree-default :after 'org-save-all-org-buffers)
+  ()
+
+  (require 'org-tempo)
+
+  (use-package org-bullets
+    :ensure t
+    :config
+    (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+
+  (setq calendar-week-start-day 1)
+
+  (setq org-special-ctrl-a/e t)
+  (setq org-html-validation-link nil)
+#+END_SRC
+
+- do not truncate lines and enable word wrap
+
+#+begin_src emacs-lisp 
+  (set-default 'truncate-lines nil)
+  (set-default 'word-wrap t)
+  (setq helm-buffers-truncate-lines nil)
+  (setq org-startup-truncated nil)
+#+end_src
+
+- do not align tags
+- Set the symbols for different heading levels
+- Load org-pretty tags
+
+#+begin_src emacs-lisp
+  (setq org-auto-align-tags nil)
+  (setq org-bullets-bullet-list (quote ("◉" "◆" "✚" "☀" "○")))
+  (use-package org-pretty-tags
+    :ensure t)
+#+end_src
+
+- count all checkboxes not just the one directly
+  below
+
+#+begin_src emacs-lisp
+  (setq org-checkbox-hierarchical-statistics nil)
+#+end_src
+
+- there is a way to resize images according to 4
+  laws which makes a loot of sense, but I don't
+  have to code to do that. Look when you
+  have time [[https://sainathadapa.github.io/emacs-spacemacs-config/org-config][Here]]
+
+#+begin_src emacs-lisp
+  (setq org-image-actual-width 1800)
+#+end_src
+
+- org agenda:
+  1. Compact layout
+  2. Restore layout after exit from agenda view
+  3. Default appointment duration (30 minutes)
+  4. Pressing Tab while the cursor is on a task
+     will expand that task in a separate buffer
+  5. Include these files and directories when
+     creating the agenda ( Dropbox /orgfiles )
+  6. Don't show tasks in agenda if they are done
+  7. Max number of days to show in agenda
+  8. Warn about a deadline
+  9. Agenda starts on the current day
+  10. Sorting strategy
+  11. Display format
+  12. Default format for columns view
+  13. Place tags close to the right-hand side of
+      the window. From
+      http://lists.gnu.org/archive/html/emacs-orgmode//2010-12/msg00410.html
+  14. By default, agenda will reorganize
+      frames/splits
+  15. By default, Org maintains only a single
+      agenda buffer and rebuilds it each time you
+      change the view, to make sure everything is
+      always up to date. If you often switch
+      between agenda views and the build time
+      bothers you, you can turn on sticky agenda
+      buffers or make this the default by
+      customizing the variable
+      org-agenda-sticky. With sticky agendas, the
+      agenda dispatcher will not recreate agenda
+      views from scratch, it will only switch to
+      the selected one, and you need to update the
+      agenda by hand with r or g when needed. You
+      can toggle sticky agenda view any time with
+      org-toggle-sticky-agenda.
+  16. When you run an agenda command, Org visits
+      agenda files that are not yet visited. When
+      finding a file for the first time, Org
+      checks the startup options and apply them to
+      the buffer: those options are either
+      globally set through the org-startup-*
+      variables or on a per-file basis through the
+      #+STARTUP keyword. Especially, Org will
+      honor the startup visibility status, as set
+      by org-startup-folded or #+STARTUP:
+      folded. This may slow down the operation of
+      visiting a file very much, and the process
+      of selecting agenda entries consequently. To
+      prevent agenda commands to honor startup
+      options when visiting an agenda file for the
+      first time, do this
+
+
+#+begin_src emacs-lisp
+  (setq org-agenda-compact-blocks t)
+  (setq org-agenda-restore-windows-after-quit t)
+  (setq org-agenda-default-appointment-duration 30)
+  (add-hook 'org-agenda-mode-hook
+            (lambda () (local-set-key [tab] 'org-agenda-tree-to-indirect-buffer)))
+  (setq org-agenda-files '("~/Dropbox/orgfiles"))
+  (setq org-agenda-skip-deadline-if-done t)
+  (setq org-agenda-skip-scheduled-if-done t)
+  (setq org-agenda-span 45)
+  (setq org-deadline-warning-days 90)
+  (setq org-agenda-start-on-weekday nil)
+
+  (setq org-agenda-sorting-strategy
+        (quote
+         ((agenda priority-down alpha-up)
+          (todo priority-down alpha-up)
+          (tags priority-down alpha-up))))
+
+  (setq org-agenda-prefix-format
+        (quote
+         ((agenda . "%s %?-12t %e ")
+          (timeline . "  %s")
+          (todo . " %i %e ")
+          (tags . " %i %e ")
+          (search . " %i %e "))))
+  (setq org-columns-default-format
+        "%75ITEM %TODO %PRIORITY %SCHEDULED %DEADLINE %CLOSED %ALLTAGS")
+  (add-hook 'org-finalize-agenda-hook 'place-agenda-tags)
+  (defun place-agenda-tags ()
+    "Put the agenda tags by the right border of the agenda window."
+    (setq org-agenda-tags-column (- 4 (window-width)))
+    (org-agenda-align-tags))
+  (setq org-agenda-window-setup 'reorganize-frame)
+  (setq org-agenda-sticky nil)
+  (setq org-agenda-inhibit-startup t)
+#+end_src
+
+** CONTINUA QUA
+
+** open emacs agenda automatically
+
+#+begin_src emacs-lisp
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
+  (setq initial-buffer-choice "~/Dropbox/orgfiles/ciao.org")
+
+  (defun my-init-hook ()
+    (split-window-right)
+    (let ((org-agenda-window-setup 'other-window))
+      (org-agenda nil "a")))
+
+  (add-hook 'window-setup-hook #'my-init-hook)
+
+#+end_src
+
+
+** auto-fill (vai a capo) and auto-completion
+
+#+begin_src emacs-lisp
+
+(auto-fill-mode -1)
+(remove-hook 'text-mode-hook #'turn-on-auto-fill)
+
+(add-hook 'org-mode-hook 'turn-off-auto-fill)
+(remove-hook 'org-mode-hook #'turn-on-auto-fill)
+
+
+
+
+  ;; (add-hook 'org-mode-hook '(lambda () (setq fill-column 50)))
+  ;; (add-hook 'org-mode-hook 'auto-fill-mode)
+
+  ;; (use-package org-ac
+  ;;   :ensure t
+  ;;   :init (progn
+  ;;           (require 'org-ac)
+  ;;           (org-ac/config-default)
+  ;;           ))
+#+end_src
+
+** org-file app & directory & capture & settings
+- Remember, you open links with C-c C-o
+
+#+begin_src emacs-lisp
+  (setq org-file-apps
+        (append '(
+                  ("\\.pdf\\'". "evince %s")
+                  ) org-file-apps ))
+
+  (global-set-key "\C-ca" 'org-agenda)
+
+  (custom-set-variables
+   '(org-directory "~/Dropbox/orgfiles")
+   '(org-default-notes-file (concat org-directory "/ciao.org"))
+   '(org-export-html-postamble nil)
+   ;; '(org-startup-folded (quote overview))
+   '(org-startup-folded t)
+   '(org-startup-indented t)
+   )
+
+  (global-set-key (kbd "C-c c") 'org-capture)
+
+  (setq org-agenda-files (list "~/Dropbox/orgfiles/gcal.org"
+                               "~/Dropbox/orgfiles/ciao.org"
+                               ))
+
+  (setq org-agenda-custom-commands
+        '(("c" "Simple agenda view"
+           ((agenda "")
+            (alltodo "")))))
+
+
+  (setq org-capture-templates
+        '(("a" "Appointment" entry (file+headline  "~/Dropbox/orgfiles/gcal.org" "Appointments")
+           "* TODO %?\n:PROPERTIES:\n\n:END:\nDEADLINE: %^T \n %i\n")
+          ("n" "Note" entry (file+headline "~/Dropbox/orgfiles/ciao.org" "Notes")
+           "* NB: %?\n%T")
+          ;; ("l" "Link" entry (file+headline "~/Dropbox/orgfiles/ciao.org" "Links")
+          ;; "* %?[[%:link][%:description]] %U\n%i\n %^g \n%T" :prepend t)
+          ("l" "Link" entry (file+headline "~/Dropbox/orgfiles/ciao.org" "Links")
+           "* %? %^L %^g \n%T" :prepend t)
+          ("b" "Blog idea" entry (file+headline "~/Dropbox/orgfiles/i.org" "Blog Topics:")
+           "* %?\n%T" :prepend t)
+          ("t" "To Do Item" entry (file+headline "~/Dropbox/orgfiles/ciao.org" "To Do Items")
+           "* TODO %?\n%T" :prepend t)
+          ("j" "Journal" entry (file+datetree "~/Dropbox/journal.org")
+           "* %?\nEntered on %U\n  %i\n  %a")
+          ("s" "Screencast" entry (file "~/Dropbox/orgfiles/screencastnotes.org")
+           "* %?\n%i\n")))
+#+end_src
+
+- code
+
+#+begin_src emacs-lisp
+  (defadvice org-capture-finalize
+      (after delete-capture-frame activate)
+    "Advise capture-finalize to close the frame"
+    (if (equal "capture" (frame-parameter nil 'name))
+        (delete-frame)))
+
+  (defadvice org-capture-destroy
+      (after delete-capture-frame activate)
+    "Advise capture-destroy to close the frame"
+    (if (equal "capture" (frame-parameter nil 'name))
+        (delete-frame)))
+
+  (use-package noflet
+    :ensure t )
+  (defun make-capture-frame ()
+    "Create a new frame and run org-capture."
+    (interactive)
+    (make-frame '((name . "capture")))
+    (select-frame-by-name "capture")
+    (delete-other-windows)
+    (noflet ((switch-to-buffer-other-window (buf) (switch-to-buffer buf)))
+            (org-capture)))
+#+end_src
+
+- Link
+#+begin_src emacs-lisp
+  (global-set-key (kbd "C-c l") 'org-store-link)
+#+end_src
+
+** Encrypt
+
+#+begin_src emacs-lisp
+  (require 'org-crypt)
+  (org-crypt-use-before-save-magic)
+  (setq org-tags-exclude-from-inheritance (quote ("crypt")))
+  ;; GPG key to use for encryption
+  ;; Either the Key ID or set to nil to use symmetric encryption.
+  (setq org-crypt-key nil)
+#+end_src
+** gcal
+
+#+begin_src emacs-lisp
+  (setq package-check-signature nil)
+
+
+  (use-package org-gcal
+    :ensure t
+    :config
+    (setq org-gcal-client-id "54971705536-chq41n98lb4afqu8cvldlgt550vinkkq.apps.googleusercontent.com"
+          org-gcal-client-secret "y7dB-yOAZ_DdfaqlSIqoXVSn"
+          org-gcal-file-alist '(("giovannicalzolari96@gmail.com" .  "~/Dropbox/orgfiles/gcal.org"))))
+
+  (add-hook 'org-agenda-mode-hook (lambda () (org-gcal-sync) ))
+  ;; (add-hook 'org-capture-after-finalize-hook (lambda () (org-gcal-sync) ))
+
+  (global-set-key (kbd "C-c g") 'org-gcal-post-at-point)
+#+end_src
+
+- graphical visualization of the calendar (doesn't work good)
+
+#+begin_src emacs-lisp
+
+  (use-package calfw
+    :ensure ;TODO:
+    :config
+    (require 'calfw)
+    ;; (require 'calfw-org)			
+    (setq cfw:org-overwrite-default-keybinding t)
+    ;; (require 'calfw-ical)
+    ;; (require 'calfw-cal)
+
+    (defun mycalendar ()
+      (interactive)
+      (cfw:open-calendar-buffer
+       :contents-sources
+       (list
+        ;; (cfw:org-create-source "Green")  ; orgmode source
+        (cfw:cal-create-source "gcal" "https://somecalnedaraddress" "IndianRed") ; devorah calender
+        (cfw:cal-create-source "gcal" "https://anothercalendaraddress" "IndianRed") ; google calendar ICS
+        )))
+    (setq cfw:org-overwrite-default-keybinding t))
+
+  (use-package calfw-gcal
+    :ensure t
+    :config
+    (require 'calfw-gcal))
+#+end_src
+
+
+** Unfill
+#+begin_src emacs-lisp
+  (use-package unfill
+    :ensure t)
+
+    (define-key global-map "\M-Q" 'unfill-paragraph)
+#+end_src
+* eshell
+
+#+begin_src emacs-lisp
+  
+#+end_src 
+
+* Music 
+
+#+begin_src emacs-lisp
+  (use-package simple-mpc
+    :ensure t)
+
+  (global-set-key (kbd "<f6>") 'simple-mpc)
+#+end_src
+* Pass
+
+
+#+begin_src emacs-lisp
+  (use-package pass
+    :ensure t)
+
+  (global-set-key (kbd "<f7>") 'pass)
+#+end_src
+
+* Org-settings: :noexport:
+
+
+# Local variables:
+# after-save-hook: org-html-export-to-html
+# end:
+
+#+STARTUP: indent overview
+#+options: toc:1 
+# #+setupfile: https://fniessen.github.io/org-html-themes/setup/theme-readtheorg.setup
+#+attr_html: width="100px"
+#+attr_org: :width 100
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="style.css" />

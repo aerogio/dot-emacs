@@ -1,0 +1,9 @@
+# Ignore Everything
+*
+
+# But not these files...
+!.gitignore
+!configuration.org
+!configuration.html
+!README.org
+!style.css

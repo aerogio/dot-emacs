@@ -1,0 +1,6 @@
+* Gio's Emacs Config
+
+This is my emacs configuration.
+It is messy but one day I promise I will clean it.
+
+You can access Here to see it in HTML format

@@ -1,0 +1,89 @@
+body {
+    margin: 0 20vw 0 20vw;
+    Background-color: rgb(0,10,60);
+    color: lightgrey;
+    font-family: "tvlg mono", monospace;
+}
+
+h2 {
+    text-align: center;
+    margin: 7vw;
+    color:  rgb(140,175,221);
+}
+
+h1 {
+    font-size: 4em;
+    color: rgb(255,180,200);
+    text-align: right;
+    /* right-margin: 10vw; */
+}
+
+.title {
+    text-align: left;
+}
+
+h3 {
+    margin: 5vw 0 0 10vw;
+}
+
+
+pre {
+    background: black;
+    font-size: medium;
+    padding: 3vw;
+    /* margin: 5vw; */
+    border: solid 10px black;
+    box-shadow: 0 0 2px grey;
+    /* word-wrap: break-word; */
+    /* overflow-wrap: auto; */
+    display: inline-block;
+    /* justify-content: center; */
+    height: auto;
+    /* white-space: pre-line;	 */
+}
+
+ciao {
+    color: transparent;
+}
+
+.org-src-container {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+#table-of-contents {
+    margin: 5vw;
+    color: transparent;
+
+}
+
+a {
+    color: white;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: rgb(255,160,180);
+    font-weight: 600;
+}
+
+ul {
+    margin: 5vw;
+}
+
+ol {
+    margin: 2vw;
+}
+
+li {
+    margin: 0.5vw;
+}
+
+#postamble {
+    top-margin: 10vw;
+    background:  rgb(140,175,221);
+    padding: 1vw;
+    color: black;
+    font-size: 1.2em;
+}
