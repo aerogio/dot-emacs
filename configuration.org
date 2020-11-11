@@ -26,7 +26,8 @@ Ciao!  This is my configuration file literate written in org-mode. One day I wil
 - C-x 2 and C-x 3 this time moves the cursor on the other
   tab already
 - put the back up file in directory ~/.saves ciao
-- swap windows 
+- swap windows
+- don't ask permission for risky variables
 #+BEGIN_SRC emacs-lisp
   (setq inhibit-startup-message t)
   (tool-bar-mode -1)
@@ -50,6 +51,8 @@ Ciao!  This is my configuration file literate written in org-mode. One day I wil
              (switch-to-buffer buffer-b)
              (other-window 1)))))
   (global-set-key "\C-x7" (lambda () (interactive)(swap-buffer)))
+  (advice-add 'risky-local-variable-p :override #'ignore)
+
 #+END_SRC 
 
 - display battery when full screen
@@ -274,6 +277,8 @@ Ciao!  This is my configuration file literate written in org-mode. One day I wil
     (set-face-attribute 'vertical-border  nil :foreground "#282a2e")
   (setq-default line-spacing 0.08)
 #+end_src
+
+
 
 * Fly-check
 
@@ -644,6 +649,10 @@ that you can follow up with j or k.
                 (define-key python-mode-map "(" 'electric-pair)
                 (define-key python-mode-map "[" 'electric-pair)
                 (define-key python-mode-map "{" 'electric-pair)))
+
+(setq electric-pair-inhibit-predicate
+      `(lambda (c)
+         (if (char-equal c ?\<) t (,electric-pair-inhibit-predicate c))))
 #+end_src
 * Git 
 
@@ -765,7 +774,7 @@ Here I have my org-mode configuration
    '((C . t)
      (python . t)
      (shell . t)
-     (matlab . t)))
+     (octave . t)))
 #+end_src
 #+BEGIN_SRC emacs-lisp
   (setq org-hide-leading-stars t)
@@ -1063,7 +1072,7 @@ Here I have my org-mode configuration
           org-gcal-client-secret "y7dB-yOAZ_DdfaqlSIqoXVSn"
           org-gcal-file-alist '(("giovannicalzolari96@gmail.com" .  "~/Dropbox/orgfiles/gcal.org"))))
 
-  (add-hook 'org-agenda-mode-hook (lambda () (org-gcal-sync) ))
+  ;; (add-hook 'org-agenda-mode-hook (lambda () (org-gcal-sync) ))
   ;; (add-hook 'org-capture-after-finalize-hook (lambda () (org-gcal-sync) ))
 
   (global-set-key (kbd "C-c g") 'org-gcal-post-at-point)
@@ -1144,3 +1153,4 @@ Here I have my org-mode configuration
 #+attr_html: width="100px"
 #+attr_org: :width 100
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="style.css" />
+
